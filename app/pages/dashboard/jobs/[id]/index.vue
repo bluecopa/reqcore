@@ -1108,6 +1108,7 @@ async function scoreIndividualCandidate(applicationId: string) {
     toast.success('Candidate scored', 'AI analysis complete.')
   } catch (err: any) {
     const statusMessage = err?.data?.statusMessage ?? ''
+    const errorData = err?.data?.data
     if (statusMessage.includes('AI provider not configured')) {
       toast.add({
         type: 'warning',
@@ -1118,11 +1119,27 @@ async function scoreIndividualCandidate(applicationId: string) {
       })
     } else if (statusMessage.includes('No scoring criteria')) {
       toast.warning('No scoring criteria', 'Add scoring criteria to this job first.')
+    } else if (errorData?.code === 'PARSE_FAILED') {
+      handleParseFailedError(errorData.documentId)
     } else {
       toast.error('Scoring failed', { message: statusMessage || 'An unexpected error occurred.', statusCode: err?.data?.statusCode })
     }
   } finally {
     isScoringIndividual.value = false
+  }
+}
+
+const isRetryingParse = ref(false)
+async function handleParseFailedError(documentId: string) {
+  isRetryingParse.value = true
+  try {
+    await $fetch(`/api/documents/${documentId}/parse`, { method: 'POST' })
+    toast.success('Resume re-parsed', 'Text extracted successfully. Try scoring again.')
+    await refreshApps()
+  } catch (parseErr: any) {
+    toast.error('Re-parse failed', { message: parseErr?.data?.statusMessage ?? 'Could not extract text from this document.' })
+  } finally {
+    isRetryingParse.value = false
   }
 }
 
