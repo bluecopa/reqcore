@@ -68,6 +68,12 @@ export const job = pgTable('job', {
   requireCoverLetter: boolean('require_cover_letter').notNull().default(false),
   // ── AI scoring settings ──
   autoScoreOnApply: boolean('auto_score_on_apply').notNull().default(false),
+  // ── Notification settings ──
+  /**
+   * Org member user IDs to email when a candidate applies to this job.
+   * Null/empty falls back to notifying all org admins and owners.
+   */
+  notificationRecipientIds: jsonb('notification_recipient_ids').$type<string[]>(),
   // ── Timestamps ──
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

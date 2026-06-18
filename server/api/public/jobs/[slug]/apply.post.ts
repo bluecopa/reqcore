@@ -1,4 +1,4 @@
-import { eq, and, asc, sql } from 'drizzle-orm'
+import { eq, and, asc, sql, inArray } from 'drizzle-orm'
 import { fileTypeFromBuffer } from 'file-type'
 import { job, candidate, application, jobQuestion, questionResponse, document, organization, applicationSource, trackingLink, member, user } from '../../../../database/schema'
 import { publicApplicationSchema, publicJobSlugSchema } from '../../../../utils/schemas/publicApplication'
@@ -399,41 +399,35 @@ export default defineEventHandler(async (event) => {
   }).returning({ id: application.id })
 
   // ─────────────────────────────────────────────
-  // 8a. Notify organization admins (best-effort)
+  // 8a. Notify the job's configured recipients (best-effort)
   // ─────────────────────────────────────────────
   try {
-    // Find the job title for the email
+    // Find the job title + configured recipient list for the email
     const appliedJob = await db.query.job.findFirst({
       where: eq(job.id, jobId),
-      columns: { title: true, slug: true },
+      columns: { title: true, slug: true, notificationRecipientIds: true },
     })
 
     if (appliedJob) {
-      // Resolve admin/owner members for this org
-      const adminMembers = await db
+      // Per-job recipients (org member user IDs) take precedence; when none are
+      // configured, fall back to notifying all org admins and owners. Either way
+      // we resolve emails through the member table so only current org members
+      // are ever emailed — a stale recipient who left the org is silently dropped.
+      const configuredIds = appliedJob.notificationRecipientIds ?? []
+      const recipientFilter = configuredIds.length > 0
+        ? inArray(member.userId, configuredIds)
+        : inArray(member.role, ['admin', 'owner'])
+
+      const recipientEmails = await db
         .select({ email: user.email })
         .from(member)
         .innerJoin(user, eq(user.id, member.userId))
         .where(
           and(
             eq(member.organizationId, orgId),
-            eq(member.role, 'admin'),
+            recipientFilter,
           ),
         )
-
-      // Also get owners
-      const ownerMembers = await db
-        .select({ email: user.email })
-        .from(member)
-        .innerJoin(user, eq(user.id, member.userId))
-        .where(
-          and(
-            eq(member.organizationId, orgId),
-            eq(member.role, 'owner'),
-          ),
-        )
-
-      const recipientEmails = [...adminMembers, ...ownerMembers]
 
       if (recipientEmails.length > 0) {
         const candidateName = `${firstName} ${lastName}`

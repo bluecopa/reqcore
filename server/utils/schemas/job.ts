@@ -33,6 +33,8 @@ export const createJobSchema = z.object({
   autoScoreOnApply: z.boolean().optional().default(false),
   /** Experience level required for this role */
   experienceLevel: z.enum(['junior', 'mid', 'senior', 'lead']).optional(),
+  /** Org member user IDs to notify when a candidate applies (empty = all admins/owners) */
+  notificationRecipientIds: z.array(z.string().min(1)).optional(),
 })
 
 /** Schema for updating an existing job (all fields optional, no defaults — PATCH semantics) */
@@ -57,6 +59,8 @@ export const updateJobSchema = z.object({
   autoScoreOnApply: z.boolean().optional(),
   /** Experience level required for this role */
   experienceLevel: z.enum(['junior', 'mid', 'senior', 'lead']).nullable().optional(),
+  /** Org member user IDs to notify when a candidate applies (empty/null = all admins/owners) */
+  notificationRecipientIds: z.array(z.string().min(1)).nullable().optional(),
   status: z.enum(['draft', 'open', 'closed', 'archived']).optional(),
 })
 

@@ -204,6 +204,13 @@
       "when": 1777463601249,
       "tag": "0028_custom_properties",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1781826876557,
+      "tag": "0029_faithful_morlun",
+      "breakpoints": true
     }
   ]
 }

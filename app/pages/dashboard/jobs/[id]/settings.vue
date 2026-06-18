@@ -45,6 +45,25 @@ const form = ref({
   requireResume: false,
   requireCoverLetter: false,
   autoScoreOnApply: false,
+  notificationRecipientIds: [] as string[],
+})
+
+// ─────────────────────────────────────────────
+// Org members — recipients for new-application emails
+// ─────────────────────────────────────────────
+
+const members = ref<Array<{ userId: string; role: string; user: { name: string; email: string } }>>([])
+const isLoadingMembers = ref(true)
+
+onMounted(async () => {
+  try {
+    const result = await authClient.organization.listMembers()
+    if (!result.error) {
+      members.value = (result.data?.members ?? []) as typeof members.value
+    }
+  } finally {
+    isLoadingMembers.value = false
+  }
 })
 
 watch(job, (j) => {
@@ -66,6 +85,7 @@ watch(job, (j) => {
       requireResume: j.requireResume ?? false,
       requireCoverLetter: j.requireCoverLetter ?? false,
       autoScoreOnApply: j.autoScoreOnApply ?? false,
+      notificationRecipientIds: j.notificationRecipientIds ?? [],
     }
   }
 }, { immediate: true })
@@ -101,6 +121,7 @@ const editSchema = z.object({
   requireResume: z.boolean().optional(),
   requireCoverLetter: z.boolean().optional(),
   autoScoreOnApply: z.boolean().optional(),
+  notificationRecipientIds: z.array(z.string()).optional(),
 })
 
 const errors = ref<Record<string, string>>({})
@@ -140,6 +161,10 @@ async function handleSave() {
       experienceLevel: (form.value.experienceLevel as 'junior' | 'mid' | 'senior' | 'lead' | null) || null,
       // Send null when cleared so the DB column is set to NULL
       validThrough: form.value.validThrough ? new Date(form.value.validThrough) : null,
+      // Empty selection = null → falls back to all admins/owners on the server
+      notificationRecipientIds: form.value.notificationRecipientIds.length
+        ? form.value.notificationRecipientIds
+        : null,
     }
 
     await updateJob(payload as any)
@@ -513,6 +538,40 @@ function onSalaryMaxChange(e: Event) {
               <div>
                 <span class="text-sm font-medium text-surface-900 dark:text-surface-100">Auto-score on apply</span>
                 <p class="text-xs text-surface-400 dark:text-surface-500">Automatically run AI scoring when a candidate applies.</p>
+              </div>
+            </label>
+          </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════ -->
+        <!-- SECTION: Application Notifications       -->
+        <!-- ═══════════════════════════════════════ -->
+        <section class="rounded-xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 p-6">
+          <h2 class="text-base font-semibold text-surface-900 dark:text-surface-100 mb-1">Application Notifications</h2>
+          <p class="text-xs text-surface-400 dark:text-surface-500 mb-5">
+            Choose who receives an email when a candidate applies to this job.
+            <span v-if="form.notificationRecipientIds.length === 0" class="font-medium text-surface-500 dark:text-surface-400">
+              When none are selected, all organization admins and owners are notified.
+            </span>
+          </p>
+
+          <div v-if="isLoadingMembers" class="text-sm text-surface-400">Loading members…</div>
+          <div v-else-if="members.length === 0" class="text-sm text-surface-400">No members found.</div>
+          <div v-else class="space-y-2 max-h-72 overflow-y-auto">
+            <label
+              v-for="m in members"
+              :key="m.userId"
+              class="flex items-center gap-3 cursor-pointer rounded-lg border border-surface-200 dark:border-surface-800 px-3 py-2 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
+            >
+              <input
+                v-model="form.notificationRecipientIds"
+                type="checkbox"
+                :value="m.userId"
+                class="size-4 rounded border-surface-300 dark:border-surface-600 text-brand-600 focus:ring-brand-500"
+              />
+              <div class="min-w-0">
+                <span class="block text-sm font-medium text-surface-900 dark:text-surface-100 truncate">{{ m.user.name || m.user.email }}</span>
+                <span class="block text-xs text-surface-400 dark:text-surface-500 truncate">{{ m.user.email }} · {{ m.role }}</span>
               </div>
             </label>
           </div>

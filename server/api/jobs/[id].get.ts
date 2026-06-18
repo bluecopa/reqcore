@@ -29,6 +29,7 @@ export default defineEventHandler(async (event) => {
       requireCoverLetter: true,
       autoScoreOnApply: true,
       experienceLevel: true,
+      notificationRecipientIds: true,
       createdAt: true,
       updatedAt: true,
     },
