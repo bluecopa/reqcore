@@ -93,9 +93,12 @@ export async function parseDocument(
     }
   }
   catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    const stack = error instanceof Error ? error.stack?.split('\n').slice(0, 3).join('\n') : ''
     logError('resume_parser.parse_failed', {
       mime_type: mimeType,
-      error_message: error instanceof Error ? error.message : String(error),
+      error_message: message,
+      error_stack: stack,
     })
     return null
   }
