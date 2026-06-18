@@ -197,7 +197,7 @@ const isEmpty = computed(() =>
           <LayoutDashboard class="size-9 text-white" />
         </div>
         <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-100 mb-3 tracking-tight">
-          Welcome to Reqcore
+          Welcome to Bluecopa
         </h2>
         <p class="text-sm text-surface-500 dark:text-surface-400 mb-10 leading-relaxed max-w-sm mx-auto">
           Your recruiting command center. Create your first job posting to start building your hiring pipeline.

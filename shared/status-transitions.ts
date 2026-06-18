@@ -18,10 +18,10 @@
  */
 export const APPLICATION_STATUS_TRANSITIONS: Record<string, string[]> = {
   new: ['screening', 'interview', 'rejected'],
-  screening: ['interview', 'offer', 'rejected'],
-  interview: ['offer', 'rejected'],
-  offer: ['hired', 'rejected'],
-  hired: [],
+  screening: ['interview', 'offer', 'rejected', 'new'],
+  interview: ['offer', 'rejected', 'screening'],
+  offer: ['hired', 'rejected', 'screening'],
+  hired: ['offer'],
   rejected: ['new'],
 }
 

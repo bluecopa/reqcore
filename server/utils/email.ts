@@ -64,7 +64,7 @@ interface EmailMessage {
  * Otherwise logs the fallback message and returns (no error thrown).
  * Throws on transport errors so callers can decide whether to swallow them.
  */
-async function sendEmail(msg: EmailMessage): Promise<void> {
+export async function sendEmail(msg: EmailMessage): Promise<void> {
   const from = getFromEmail()
 
   // 1. SMTP — takes priority when SMTP_HOST is configured

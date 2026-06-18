@@ -636,6 +636,30 @@ function selectCandidate(index: number) {
 const isMutating = ref(false)
 
 // ─────────────────────────────────────────────
+// Status change confirmation dialog
+// ─────────────────────────────────────────────
+const showStatusConfirm = ref(false)
+const pendingStatus = ref<string | null>(null)
+
+function confirmStatusChange(status: string) {
+  pendingStatus.value = status
+  showStatusConfirm.value = true
+}
+
+function executeStatusChange() {
+  if (pendingStatus.value) {
+    changeStatus(pendingStatus.value)
+  }
+  showStatusConfirm.value = false
+  pendingStatus.value = null
+}
+
+function cancelStatusChange() {
+  showStatusConfirm.value = false
+  pendingStatus.value = null
+}
+
+// ─────────────────────────────────────────────
 // Interview scheduling sidebar
 // ─────────────────────────────────────────────
 
@@ -1048,7 +1072,7 @@ function handleKeyNavigation(event: KeyboardEvent) {
     if (targetStatus === 'interview') {
       openInterviewScheduler()
     } else {
-      changeStatus(targetStatus)
+      confirmStatusChange(targetStatus)
     }
   }
 }
@@ -1485,7 +1509,6 @@ function closeDocPreview() {
 
           <!-- Empty state -->
           <div
-            v-if="!currentSummary"
             class="flex flex-1 flex-col items-center justify-center p-8 text-center"
           >
             <div class="flex size-16 items-center justify-center rounded-2xl bg-surface-100 dark:bg-surface-800/60 mb-4">
@@ -1509,7 +1532,7 @@ function closeDocPreview() {
                   :disabled="isMutating"
                   class="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm inline-flex items-center gap-1.5"
                   :class="transitionClasses[nextStatus] ?? 'border border-surface-300 text-surface-600 hover:bg-surface-50'"
-                  @click="nextStatus === 'interview' ? openInterviewScheduler() : changeStatus(nextStatus)"
+                  @click="nextStatus === 'interview' ? openInterviewScheduler() : confirmStatusChange(nextStatus)"
                 >
                   {{ transitionLabels[nextStatus] ?? nextStatus }}
                   <kbd class="inline-flex items-center justify-center rounded px-1 py-0.5 text-[10px] font-mono leading-none opacity-60 bg-black/10 dark:bg-white/10 min-w-[16px]">{{ idx + 1 }}</kbd>
@@ -2508,6 +2531,45 @@ function closeDocPreview() {
           </div>
         </div>
       </div>
+    </Teleport>
+
+    <!-- Status change confirmation dialog -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition duration-150 ease-out"
+        enter-from-class="opacity-0 scale-95"
+        enter-to-class="opacity-100 scale-100"
+        leave-active-class="transition duration-100 ease-in"
+        leave-from-class="opacity-100 scale-100"
+        leave-to-class="opacity-0 scale-95"
+      >
+        <div v-if="showStatusConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div class="absolute inset-0 bg-black/50 dark:bg-black/70" @click="cancelStatusChange" />
+          <div class="relative w-full max-w-sm rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-2xl p-6 text-center">
+            <div class="mx-auto mb-4 flex items-center justify-center size-12 rounded-2xl bg-warning-50 dark:bg-warning-950/40">
+              <AlertTriangle class="size-5 text-warning-600 dark:text-warning-400" />
+            </div>
+            <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">Change candidate status?</h3>
+            <p class="text-sm text-surface-500 dark:text-surface-400 mb-6">
+              Move this candidate to <strong class="text-surface-700 dark:text-surface-300">{{ transitionLabels[pendingStatus!] ?? pendingStatus }}</strong>?
+            </p>
+            <div class="flex items-center gap-2 justify-center">
+              <button
+                class="rounded-xl px-4 py-2.5 text-sm font-medium text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+                @click="cancelStatusChange"
+              >
+                Cancel
+              </button>
+              <button
+                class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors"
+                @click="executeStatusChange"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </Teleport>
   </div>
 </template>

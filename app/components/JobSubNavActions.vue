@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { UserPlus, Pencil, Trash2, MoreHorizontal, Brain, Settings2 } from 'lucide-vue-next'
+import { UserPlus, Pencil, Trash2, MoreHorizontal, Brain, Settings2, ExternalLink } from 'lucide-vue-next'
 import { JOB_STATUS_TRANSITIONS } from '~~/shared/status-transitions'
 
 const props = defineProps<{
@@ -208,6 +208,19 @@ function openPropertyEditor(scope: 'org' | 'job') {
         <UserPlus class="size-3" />
         Add Candidate
       </button>
+
+      <!-- View Public Post -->
+      <a
+        v-if="job?.slug"
+        :href="`/jobs/${job.slug}`"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-surface-200 dark:border-surface-700/80 px-2.5 py-1 text-[11px] font-medium text-surface-600 dark:text-surface-300 hover:bg-white hover:border-surface-300 dark:hover:bg-surface-800 dark:hover:border-surface-600 transition-all duration-150 no-underline"
+        title="View public job post"
+      >
+        <ExternalLink class="size-3" />
+        <span class="hidden sm:inline">View Post</span>
+      </a>
 
       <!-- Primary job action (e.g., Publish) -->
       <button

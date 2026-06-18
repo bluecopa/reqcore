@@ -13,7 +13,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Reqcore Assistant',
+  title: 'Bluecopa Assistant',
   robots: 'noindex, nofollow',
 })
 
@@ -224,7 +224,7 @@ async function startNew() {
   <div v-if="!enabled" class="mx-auto max-w-2xl py-24 text-center">
     <Sparkles class="mx-auto size-10 text-surface-400" />
     <h1 class="mt-4 text-2xl font-semibold text-surface-900 dark:text-surface-100">
-      Reqcore Assistant
+      Bluecopa Assistant
     </h1>
     <p class="mt-2 text-sm text-surface-500">
       This feature isn't available on your account yet.
@@ -242,7 +242,7 @@ async function startNew() {
         <div class="flex items-center gap-3 min-w-0">
           <div class="min-w-0">
             <h1 class="truncate text-sm font-semibold tracking-tight text-surface-900 dark:text-surface-100">
-              Reqcore Assistant
+              Bluecopa Assistant
             </h1>
             <p class="truncate text-[11px] text-surface-500 dark:text-surface-400">
               Context-aware copilot for your hiring data
@@ -366,7 +366,7 @@ async function startNew() {
           </h2>
           <p class="mt-2 max-w-md text-sm text-surface-500">
             Ask anything about your jobs, candidates, applications, or uploaded resumes.
-            Reqcore Assistant has live access to your hiring data.
+            Bluecopa Assistant has live access to your hiring data.
           </p>
           <div class="mt-8 grid w-full max-w-2xl grid-cols-1 gap-2 sm:grid-cols-2">
             <button
@@ -390,8 +390,8 @@ async function startNew() {
           >
             <img
               v-if="m.role === 'assistant'"
-              src="/eagle-mascot-logo-128.png"
-              alt="Reqcore Assistant"
+              src="/logo.svg"
+              alt="Bluecopa Assistant"
               class="size-9 shrink-0 object-contain mt-2"
             />
 
@@ -550,7 +550,7 @@ async function startNew() {
               ref="composer"
               v-model="draft"
               rows="1"
-              placeholder="Ask Reqcore Assistant anything…"
+              placeholder="Ask Bluecopa Assistant anything…"
               class="block w-full resize-none border-0 bg-transparent px-4 pt-3 text-sm text-surface-900 dark:text-surface-100 placeholder:text-surface-400 focus:outline-none focus:ring-0"
               @keydown="onKeyDown"
             />
@@ -609,7 +609,7 @@ async function startNew() {
             {{ error }}
           </p>
           <p v-else class="mt-2 text-center text-[11px] text-surface-400">
-            Reqcore Assistant can make mistakes. Verify candidate-impacting decisions.
+            Bluecopa Assistant can make mistakes. Verify candidate-impacting decisions.
           </p>
         </div>
       </div>

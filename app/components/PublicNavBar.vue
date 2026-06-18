@@ -20,15 +20,15 @@ const { isDark, toggle: toggleColorMode } = useColorMode()
         class="flex items-center gap-2.5 text-[15px] font-semibold tracking-tight text-surface-900 dark:text-white"
       >
         <img
-          src="/eagle-mascot-logo-128.png"
-          alt="Reqcore mascot"
+          src="/logo.svg"
+          alt="Bluecopa"
           width="28"
           height="28"
           loading="eager"
           decoding="sync"
           class="h-7 w-7 object-contain"
         />
-        Reqcore
+        Bluecopa
       </a>
 
       <!-- Center nav links (desktop) -->

@@ -6,7 +6,7 @@ const railwayEnvironmentName =
   process.env.RAILWAY_ENVIRONMENT_NAME?.toLowerCase() ?? "";
 const railwayPublicDomain =
   process.env.RAILWAY_PUBLIC_DOMAIN?.toLowerCase() ?? "";
-const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || "https://reqcore.com";
+const siteUrl = process.env.NUXT_PUBLIC_SITE_URL || "https://bluecopa.com";
 const i18nDefaultLocale = "en";
 const i18nLocales = [
   { code: "en", language: "en-US", name: "English", file: "en.json" },
@@ -168,7 +168,7 @@ export default defineNuxtConfig({
   // ─────────────────────────────────────────────
   app: {
     head: {
-      titleTemplate: "%s — Reqcore",
+      titleTemplate: "%s — Bluecopa",
       link: [
         { rel: "icon", type: "image/png", href: "/favicon.png" },
         { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -193,10 +193,10 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      /** Base URL of the marketing site (reqcore-web) for cross-domain links */
+      /** Base URL of the marketing site for cross-domain links */
       marketingUrl:
-        process.env.NUXT_PUBLIC_MARKETING_URL || "https://reqcore.com",
-      /** Cookie domain for cross-subdomain sharing (e.g. '.reqcore.com') */
+        process.env.NUXT_PUBLIC_MARKETING_URL || "https://bluecopa.com",
+      /** Cookie domain for cross-subdomain sharing (e.g. '.bluecopa.com') */
       cookieDomain: process.env.NUXT_PUBLIC_COOKIE_DOMAIN || "",
       // PostHog runtimeConfig is managed by @posthog/nuxt via posthogConfig above.
       // Override at runtime with NUXT_PUBLIC_POSTHOG_PUBLIC_KEY / NUXT_PUBLIC_POSTHOG_HOST.
@@ -206,15 +206,14 @@ export default defineNuxtConfig({
       /** Public live-demo account email used to prefill sign-in */
       liveDemoEmail: (() => {
         const email =
-          process.env.LIVE_DEMO_EMAIL ||
           process.env.DEMO_EMAIL ||
-          "demo@reqcore.com";
+          "demo@bluecopa.com";
         // Guard against stale applirank.com domain from old env vars
         if (email.endsWith("@applirank.com")) {
           console.warn(
-            "[config] Stale demo email detected (applirank.com domain) — falling back to demo@reqcore.com",
+            "[config] Stale demo email detected (applirank.com domain) — falling back to demo@bluecopa.com",
           );
-          return "demo@reqcore.com";
+          return "demo@bluecopa.com";
         }
         return email;
       })(),

@@ -1,10 +1,11 @@
 import { eq, and, asc, sql } from 'drizzle-orm'
 import { fileTypeFromBuffer } from 'file-type'
-import { job, candidate, application, jobQuestion, questionResponse, document, organization, applicationSource, trackingLink } from '../../../../database/schema'
+import { job, candidate, application, jobQuestion, questionResponse, document, organization, applicationSource, trackingLink, member, user } from '../../../../database/schema'
 import { publicApplicationSchema, publicJobSlugSchema } from '../../../../utils/schemas/publicApplication'
 import { createPreviewReadOnlyError } from '../../../../utils/previewReadOnly'
 import { autoScoreApplication } from '../../../../utils/ai/autoScore'
 import { parseDocument } from '../../../../utils/resume-parser'
+import { sendEmail } from '../../../../utils/email'
 import {
   ALLOWED_MIME_TYPES,
   MAX_FILE_SIZE,
@@ -389,7 +390,6 @@ export default defineEventHandler(async (event) => {
   // ─────────────────────────────────────────────
   // 8. Create application
   // ─────────────────────────────────────────────
-
   const [newApplication] = await db.insert(application).values({
     organizationId: orgId,
     candidateId,
@@ -397,6 +397,69 @@ export default defineEventHandler(async (event) => {
     status: 'new',
     coverLetterText: coverLetterText || null,
   }).returning({ id: application.id })
+
+  // ─────────────────────────────────────────────
+  // 8a. Notify organization admins (best-effort)
+  // ─────────────────────────────────────────────
+  try {
+    // Find the job title for the email
+    const appliedJob = await db.query.job.findFirst({
+      where: eq(job.id, jobId),
+      columns: { title: true, slug: true },
+    })
+
+    if (appliedJob) {
+      // Resolve admin/owner members for this org
+      const adminMembers = await db
+        .select({ email: user.email })
+        .from(member)
+        .innerJoin(user, eq(user.id, member.userId))
+        .where(
+          and(
+            eq(member.organizationId, orgId),
+            eq(member.role, 'admin'),
+          ),
+        )
+
+      // Also get owners
+      const ownerMembers = await db
+        .select({ email: user.email })
+        .from(member)
+        .innerJoin(user, eq(user.id, member.userId))
+        .where(
+          and(
+            eq(member.organizationId, orgId),
+            eq(member.role, 'owner'),
+          ),
+        )
+
+      const recipientEmails = [...adminMembers, ...ownerMembers]
+
+      if (recipientEmails.length > 0) {
+        const candidateName = `${firstName} ${lastName}`
+        const subject = `New application: ${candidateName} for ${appliedJob.title}`
+        const html = `<p><strong>${candidateName}</strong> applied for <strong>${appliedJob.title}</strong>.</p><p>Review the application on your dashboard.</p>`
+        const text = `${candidateName} applied for ${appliedJob.title}. Review the application on your dashboard.`
+
+        for (const recipient of recipientEmails) {
+          await sendEmail({
+            to: recipient.email,
+            subject,
+            html,
+            text,
+            logFallback: `[New Application] ${subject}`,
+            errorCategory: 'application.notification_failed',
+          })
+        }
+      }
+    }
+  } catch (notifyErr) {
+    // Best-effort — never fail an application for a notification error
+    logWarn('application.notification_failed', {
+      application_id: newApplication!.id,
+      error_message: notifyErr instanceof Error ? notifyErr.message : String(notifyErr),
+    })
+  }
 
   // ─────────────────────────────────────────────
   // 8b. Record source attribution

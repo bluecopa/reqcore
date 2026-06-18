@@ -6,8 +6,8 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Accept Invitation — Reqcore',
-  description: 'Accept an organization invitation on Reqcore',
+  title: 'Accept Invitation — Bluecopa',
+  description: 'Accept an organization invitation on Bluecopa',
   robots: 'noindex, nofollow',
 })
 
@@ -132,7 +132,7 @@ onMounted(() => {
       </div>
       <h2 class="text-xl font-semibold text-surface-900 dark:text-surface-100 mb-1">Accept invitation</h2>
       <p class="text-sm text-surface-500 dark:text-surface-400">
-        You've been invited to join an organization on Reqcore.
+        You've been invited to join an organization on Bluecopa.
       </p>
     </div>
 

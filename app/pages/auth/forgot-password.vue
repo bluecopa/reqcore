@@ -5,8 +5,8 @@ definePageMeta({
 });
 
 useSeoMeta({
-    title: "Forgot Password — Reqcore",
-    description: "Reset your Reqcore account password",
+    title: "Forgot Password — Bluecopa",
+    description: "Reset your Bluecopa account password",
     robots: "noindex, nofollow",
 });
 
