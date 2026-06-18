@@ -4,11 +4,9 @@
  * Extracts text content from uploaded documents (PDF, DOCX, DOC).
  * Returns structured parsed content for storage in document.parsedContent.
  *
- * Supports:
- *   - PDF — via pdf-parse (pdfjs-dist based)
+ *   - PDF — via pdfreader (pure JS, zero native deps)
  *   - DOCX — via mammoth (XML-based, reliable)
  *   - DOC — via word-extractor (OLE2 compound documents)
- */
 import mammoth from 'mammoth'
 // @ts-ignore — word-extractor has no bundled type declarations
 import WordExtractor from 'word-extractor'
@@ -61,53 +59,38 @@ export async function parseDocument(
 
 // ─── PDF Parser ───────────────────────────────────────────────────
 // Uses pdfjs-dist directly for text extraction via getTextContent().
-// This API needs zero canvas/DOMatrix/rendering — pure text layer.
-// The pdf-parse wrapper was dropped because its rendering path fails
-// on platforms without native canvas (Railway).
-let pdfjsLib: any = null
-async function getPdfjsLib() {
-  if (pdfjsLib) return pdfjsLib
-  // Node.js has no global Worker — polyfill before pdfjs-dist loads
-  if (typeof globalThis.Worker === 'undefined') {
-    ;(globalThis as any).Worker = class Worker {
-      onmessage: any = null
-      onerror: any = null
-      postMessage() {}
-      terminate() {}
-    }
-  }
-  pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
-  return pdfjsLib
-}
+// ─── PDF Parser ───────────────────────────────────────────────────
+// Uses pdfreader — a pure-JS PDF text extractor with zero native
+// dependencies. No canvas, DOMMatrix, or Worker required.
+// pdfjs-dist was dropped because it needs platform-specific Worker
+// and canvas polyfills that fail on Railway.
+
+import { PdfReader } from 'pdfreader'
+
 async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
   if (buffer.length === 0) return null
 
   try {
-    logInfo('resume_parser.pdf_start', { bytes: buffer.length })
-    const pdfjs = await getPdfjsLib()
-    logInfo('resume_parser.pdf_lib_loaded')
-    const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer) })
-    const pdf = await loadingTask.promise
+    const textParts: string[] = []
+    await new Promise<void>((resolve, reject) => {
+      new PdfReader().parseBuffer(buffer, (err: any, item: any) => {
+        if (err) return reject(err)
+        if (!item) {
+          resolve()
+        } else if (item.text) {
+          textParts.push(item.text)
+        }
+      })
+    })
 
-    const pageTexts: string[] = []
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i)
-      const content = await page.getTextContent()
-      const pageText = content.items
-        .map((item: any) => item.str ?? '')
-        .join(' ')
-      pageTexts.push(pageText)
-    }
-
-    const text = normalizeText(pageTexts.join('\n'))
-    logInfo('resume_parser.pdf_text', { chars: text.length, pages: pdf.numPages })
+    const text = normalizeText(textParts.join(' '))
     if (!text) return null
 
     return {
       text,
       sections: extractSections(text),
       metadata: {
-        pageCount: pdf.numPages,
+        pageCount: null, // pdfreader doesn't expose page count in stream mode
         wordCount: countWords(text),
         characterCount: text.length,
         extractedAt: new Date().toISOString(),

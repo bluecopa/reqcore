@@ -48,6 +48,7 @@
     "nodemailer": "^8.0.7",
     "nuxt": "^4.4.8",
     "pdf-parse": "^2.4.5",
+    "pdfreader": "^3.0.8",
     "postgres": "^3.4.8",
     "posthog-node": "^5.28.0",
     "resend": "^6.12.2",
