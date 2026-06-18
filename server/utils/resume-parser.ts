@@ -31,6 +31,7 @@ export async function parseDocument(
   mimeType: string,
 ): Promise<ParsedResume | null> {
   try {
+    console.error('[resume-parser] parseDocument called, mime:', mimeType, 'bytes:', buffer?.length)
     switch (mimeType) {
       case 'application/pdf':
         return await parsePdf(buffer)
@@ -39,6 +40,7 @@ export async function parseDocument(
       case 'application/msword':
         return await parseDoc(buffer)
       default:
+        console.error('[resume-parser] Unsupported mime type:', mimeType)
         logWarn('resume_parser.unsupported_mime_type', {
           mime_type: mimeType,
         })
@@ -47,6 +49,7 @@ export async function parseDocument(
   }
   catch (error) {
     const message = error instanceof Error ? error.message : String(error)
+    console.error('[resume-parser] parseDocument failed:', message)
     const stack = error instanceof Error ? error.stack?.split('\n').slice(0, 3).join('\n') : ''
     logError('resume_parser.parse_failed', {
       mime_type: mimeType,
@@ -71,11 +74,16 @@ async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
   if (buffer.length === 0) return null
 
   try {
+    console.error('[resume-parser] Starting PDF parse, buffer size:', buffer.length)
     const textParts: string[] = []
     await new Promise<void>((resolve, reject) => {
       new PdfReader().parseBuffer(buffer, (err: any, item: any) => {
-        if (err) return reject(err)
+        if (err) {
+          console.error('[resume-parser] pdfreader error:', err.message)
+          return reject(err)
+        }
         if (!item) {
+          console.error('[resume-parser] pdfreader done, items:', textParts.length)
           resolve()
         } else if (item.text) {
           textParts.push(item.text)
@@ -84,13 +92,14 @@ async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
     })
 
     const text = normalizeText(textParts.join(' '))
+    console.error('[resume-parser] Text extracted:', text.length, 'chars')
     if (!text) return null
 
     return {
       text,
       sections: extractSections(text),
       metadata: {
-        pageCount: null, // pdfreader doesn't expose page count in stream mode
+        pageCount: null,
         wordCount: countWords(text),
         characterCount: text.length,
         extractedAt: new Date().toISOString(),
@@ -99,6 +108,7 @@ async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
       },
     }
   } catch (error) {
+    console.error('[resume-parser] PDF parse failed:', error instanceof Error ? error.message : String(error))
     logError('resume_parser.pdf_failed', {
       error_message: error instanceof Error ? error.message : String(error),
       error_stack: error instanceof Error ? error.stack?.split('\n').slice(0, 4).join('\n') : '',
