@@ -11,7 +11,7 @@ const pillars = computed(() => [
   { icon: Users, label: t('home.pillars.unlimitedSeats.label'), desc: t('home.pillars.unlimitedSeats.desc') },
 ])
 
-useHead({ title: 'Reqcore' })
+useHead({ title: 'Bluecopa' })
 definePageMeta({ layout: false })
 </script>
 

@@ -7,7 +7,7 @@ import {
 definePageMeta({})
 
 useSeoMeta({
-  title: 'Integrations — Reqcore',
+  title: 'Integrations — Bluecopa',
   description: 'Connect your calendar and other services',
 })
 

@@ -7,7 +7,7 @@ import {
 definePageMeta({})
 
 useSeoMeta({
-  title: 'Single Sign-On — Reqcore',
+  title: 'Single Sign-On — Bluecopa',
   description: 'Configure enterprise SSO for your organization',
 })
 
@@ -355,7 +355,7 @@ async function copyCallbackUrl(providerId: string) {
                 class="px-3 py-2 border border-surface-300 dark:border-surface-700 rounded-md text-sm text-surface-900 dark:text-surface-100 bg-white dark:bg-surface-800 outline-none transition-colors focus:border-brand-500 focus:ring-2 focus:ring-brand-500/15 font-mono text-xs"
               />
               <span class="text-xs text-surface-400">
-                The OIDC issuer URL. Reqcore will auto-discover endpoints from
+                The OIDC issuer URL. Bluecopa will auto-discover endpoints from
                 <code class="text-xs">/.well-known/openid-configuration</code>.
               </span>
             </label>
@@ -431,7 +431,7 @@ async function copyCallbackUrl(providerId: string) {
               <li>Create an OIDC application in your identity provider (Okta, Azure AD, Google Workspace, etc.).</li>
               <li>Set the <strong>Redirect URI</strong> to: <code class="bg-surface-100 dark:bg-surface-800 px-1 py-0.5 rounded text-xs">{{ `${siteOrigin}/api/auth/sso/callback/{provider-id}` }}</code></li>
               <li>Copy the <strong>Client ID</strong> and <strong>Client Secret</strong> from your IdP and paste them above.</li>
-              <li>Enter the <strong>Issuer URL</strong> — Reqcore will auto-discover all OIDC endpoints.</li>
+              <li>Enter the <strong>Issuer URL</strong> — Bluecopa will auto-discover all OIDC endpoints.</li>
             </ol>
 
             <div class="mt-3 flex flex-wrap gap-2">
@@ -476,7 +476,7 @@ async function copyCallbackUrl(providerId: string) {
           </div>
           <div class="flex gap-3">
             <div class="flex items-center justify-center size-6 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 text-xs font-bold shrink-0">2</div>
-            <p>Team members visit the sign-in page and enter their work email. Reqcore detects the email domain and redirects to your IdP.</p>
+            <p>Team members visit the sign-in page and enter their work email. Bluecopa detects the email domain and redirects to your IdP.</p>
           </div>
           <div class="flex gap-3">
             <div class="flex items-center justify-center size-6 rounded-full bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400 text-xs font-bold shrink-0">3</div>

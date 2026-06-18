@@ -7,7 +7,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Applications — Reqcore',
+  title: 'Applications — Bluecopa',
   description: 'Manage applications across all jobs',
 })
 

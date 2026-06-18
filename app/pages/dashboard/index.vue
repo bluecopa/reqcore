@@ -12,7 +12,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Dashboard — Reqcore',
+  title: 'Dashboard — Bluecopa',
   description: 'Your recruiting command center',
 })
 

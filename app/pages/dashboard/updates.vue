@@ -15,7 +15,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Updates — Reqcore',
+  title: 'Updates — Bluecopa',
   description: 'Check for updates and manage your self-hosted instance',
 })
 
@@ -399,7 +399,7 @@ function formatDate(dateString: string | null | undefined): string {
         >
           <div v-if="showUpdateConfirm" class="rounded-lg border border-warning-200 dark:border-warning-800 bg-warning-50/50 dark:bg-warning-950/30 px-4 py-4 space-y-3">
             <p class="text-sm text-surface-700 dark:text-surface-300">
-              This will update your Reqcore instance from <strong>v{{ versionInfo.currentVersion }}</strong> to <strong>v{{ versionInfo.latestVersion }}</strong>. The app will restart during the update.
+              This will update your Bluecopa instance from <strong>v{{ versionInfo.currentVersion }}</strong> to <strong>v{{ versionInfo.latestVersion }}</strong>. The app will restart during the update.
             </p>
             <div class="flex items-center gap-2">
               <button
@@ -802,7 +802,7 @@ function formatDate(dateString: string | null | undefined): string {
           <div>
             <h4 class="text-sm font-semibold text-surface-800 dark:text-surface-200 mb-2">Manual / Git deployment</h4>
             <div class="rounded-lg bg-surface-900 dark:bg-surface-950 px-4 py-3 font-mono text-sm text-surface-100 space-y-1 overflow-x-auto">
-              <p class="text-surface-500"># Navigate to your Reqcore directory</p>
+              <p class="text-surface-500"># Navigate to your Bluecopa directory</p>
               <p>cd /path/to/reqcore</p>
               <p class="text-surface-500 mt-3"># Pull the latest version</p>
               <p>git pull origin main</p>

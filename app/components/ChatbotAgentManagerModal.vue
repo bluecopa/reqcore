@@ -207,7 +207,7 @@ const atCap = computed(() => agents.value.length >= CHATBOT_AGENT_MAX_PER_USER)
                 <textarea
                   v-model="draft.systemPrompt"
                   rows="10"
-                  placeholder="Describe how this agent should behave. The default Reqcore tooling instructions are always prepended automatically."
+                  placeholder="Describe how this agent should behave. The default Bluecopa tooling instructions are always prepended automatically."
                   class="w-full rounded-lg border bg-white dark:bg-surface-900 px-3 py-2 text-sm text-surface-900 dark:text-surface-100 focus:outline-none focus:ring-1 font-mono"
                   :class="promptTooLong
                     ? 'border-danger-400 focus:border-danger-500 focus:ring-danger-500'

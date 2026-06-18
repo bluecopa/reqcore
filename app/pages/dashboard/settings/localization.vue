@@ -4,7 +4,7 @@ import { Globe, Save, Check, Loader2 } from 'lucide-vue-next'
 definePageMeta({})
 
 useSeoMeta({
-  title: 'Localization Settings — Reqcore',
+  title: 'Localization Settings — Bluecopa',
   description: 'Configure name display format and date format for your organization',
 })
 

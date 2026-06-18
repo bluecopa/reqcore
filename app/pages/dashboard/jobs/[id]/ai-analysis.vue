@@ -17,7 +17,7 @@ const { job, status: jobFetchStatus, error: jobError, updateJob } = useJob(jobId
 
 useSeoMeta({
   title: computed(() =>
-    job.value ? `AI Analysis — ${job.value.title} — Reqcore` : 'AI Analysis — Reqcore',
+    job.value ? `AI Analysis — ${job.value.title} — Bluecopa` : 'AI Analysis — Bluecopa',
   ),
   robots: 'noindex, nofollow',
 })

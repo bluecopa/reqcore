@@ -13,7 +13,7 @@ import {
 definePageMeta({})
 
 useSeoMeta({
-  title: 'AI Configuration — Reqcore',
+  title: 'AI Configuration — Bluecopa',
   description: 'Configure AI providers and models for the chatbot and candidate analysis.',
 })
 

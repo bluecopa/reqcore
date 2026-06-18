@@ -17,7 +17,7 @@ const { data: job } = useFetch(`/api/public/jobs/${jobSlug}`, {
 })
 
 useSeoMeta({
-  title: 'Application Submitted — Reqcore',
+  title: 'Application Submitted — Bluecopa',
   robots: 'noindex, nofollow',
 })
 </script>

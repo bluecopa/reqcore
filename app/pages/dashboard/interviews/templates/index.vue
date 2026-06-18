@@ -10,7 +10,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Email Templates — Reqcore',
+  title: 'Email Templates — Bluecopa',
   description: 'Manage interview invitation email templates',
   robots: 'noindex, nofollow',
 })

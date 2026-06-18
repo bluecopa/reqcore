@@ -16,7 +16,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Timeline — Reqcore',
+  title: 'Timeline — Bluecopa',
   description: 'Full activity timeline for your organization',
 })
 

@@ -21,7 +21,7 @@ const { formatPersonName } = useOrgSettings()
 const linkId = computed(() => route.params.id as string)
 
 useSeoMeta({
-  title: 'Link Details — Source Tracking — Reqcore',
+  title: 'Link Details — Source Tracking — Bluecopa',
   description: 'Detailed analytics for a tracking link',
 })
 

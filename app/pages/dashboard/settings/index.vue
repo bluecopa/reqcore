@@ -4,7 +4,7 @@ import { Building2, Save, AlertTriangle, Trash2, Loader2 } from 'lucide-vue-next
 definePageMeta({})
 
 useSeoMeta({
-  title: 'Organization Settings — Reqcore',
+  title: 'Organization Settings — Bluecopa',
   description: 'Manage your organization settings',
 })
 

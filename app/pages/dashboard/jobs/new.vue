@@ -44,7 +44,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Create Job — Reqcore',
+  title: 'Create Job — Bluecopa',
   description: 'Create a new job posting',
 })
 

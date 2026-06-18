@@ -530,7 +530,7 @@ watch([detailTab, timelineCandidateId], () => {
 
 useSeoMeta({
   title: computed(() =>
-    jobData.value ? `Pipeline — ${jobData.value.title} — Reqcore` : 'Pipeline — Reqcore',
+    jobData.value ? `Pipeline — ${jobData.value.title} — Bluecopa` : 'Pipeline — Bluecopa',
   ),
   robots: 'noindex, nofollow',
 })

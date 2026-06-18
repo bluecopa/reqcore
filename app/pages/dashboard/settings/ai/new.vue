@@ -10,7 +10,7 @@ import { Loader2, AlertTriangle } from 'lucide-vue-next'
 definePageMeta({})
 
 useSeoMeta({
-  title: 'Add AI model — Reqcore',
+  title: 'Add AI model — Bluecopa',
   description: 'Connect a new AI provider and model.',
 })
 

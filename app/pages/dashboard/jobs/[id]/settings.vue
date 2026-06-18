@@ -20,7 +20,7 @@ const { job, status: fetchStatus, error: fetchError, updateJob, deleteJob } = us
 
 useSeoMeta({
   title: computed(() =>
-    job.value ? `Settings — ${job.value.title} — Reqcore` : 'Job Settings — Reqcore',
+    job.value ? `Settings — ${job.value.title} — Bluecopa` : 'Job Settings — Bluecopa',
   ),
 })
 
