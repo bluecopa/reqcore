@@ -64,16 +64,21 @@ export async function parseDocument(
 // This API needs zero canvas/DOMatrix/rendering — pure text layer.
 // The pdf-parse wrapper was dropped because its rendering path fails
 // on platforms without native canvas (Railway).
-
 let pdfjsLib: any = null
 async function getPdfjsLib() {
   if (pdfjsLib) return pdfjsLib
+  // Node.js has no global Worker — polyfill before pdfjs-dist loads
+  if (typeof globalThis.Worker === 'undefined') {
+    ;(globalThis as any).Worker = class Worker {
+      onmessage: any = null
+      onerror: any = null
+      postMessage() {}
+      terminate() {}
+    }
+  }
   pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
-  // Disable worker — text extraction is fast enough on main thread
-  pdfjsLib.GlobalWorkerOptions.workerSrc = ''
   return pdfjsLib
 }
-
 async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
   if (buffer.length === 0) return null
 
@@ -81,9 +86,8 @@ async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
     logInfo('resume_parser.pdf_start', { bytes: buffer.length })
     const pdfjs = await getPdfjsLib()
     logInfo('resume_parser.pdf_lib_loaded')
-    const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer), disableWorker: true })
+    const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer) })
     const pdf = await loadingTask.promise
-    logInfo('resume_parser.pdf_opened', { pages: pdf.numPages })
 
     const pageTexts: string[] = []
     for (let i = 1; i <= pdf.numPages; i++) {
