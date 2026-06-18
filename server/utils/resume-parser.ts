@@ -78,9 +78,12 @@ async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
   if (buffer.length === 0) return null
 
   try {
+    logInfo('resume_parser.pdf_start', { bytes: buffer.length })
     const pdfjs = await getPdfjsLib()
+    logInfo('resume_parser.pdf_lib_loaded')
     const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer), disableWorker: true })
     const pdf = await loadingTask.promise
+    logInfo('resume_parser.pdf_opened', { pages: pdf.numPages })
 
     const pageTexts: string[] = []
     for (let i = 1; i <= pdf.numPages; i++) {
@@ -93,6 +96,7 @@ async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
     }
 
     const text = normalizeText(pageTexts.join('\n'))
+    logInfo('resume_parser.pdf_text', { chars: text.length, pages: pdf.numPages })
     if (!text) return null
 
     return {
@@ -110,6 +114,7 @@ async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
   } catch (error) {
     logError('resume_parser.pdf_failed', {
       error_message: error instanceof Error ? error.message : String(error),
+      error_stack: error instanceof Error ? error.stack?.split('\n').slice(0, 4).join('\n') : '',
     })
     return null
   }
