@@ -112,6 +112,25 @@ const allowedTransitions = computed(() => {
 
 const isTransitioning = ref(false)
 
+const showStatusConfirm = ref(false)
+const pendingStatus = ref<string | null>(null)
+
+function confirmTransition(newStatus: string) {
+  pendingStatus.value = newStatus
+  showStatusConfirm.value = true
+}
+
+function executeTransition() {
+  if (pendingStatus.value) handleTransition(pendingStatus.value)
+  showStatusConfirm.value = false
+  pendingStatus.value = null
+}
+
+function cancelTransition() {
+  showStatusConfirm.value = false
+  pendingStatus.value = null
+}
+
 async function handleTransition(newStatus: string) {
   isTransitioning.value = true
   try {
@@ -132,30 +151,6 @@ async function handleTransition(newStatus: string) {
   } finally {
     isTransitioning.value = false
   }
-}
-
-// ─────────────────────────────────────────────
-// Status change confirmation dialog
-// ─────────────────────────────────────────────
-const showStatusConfirm = ref(false)
-const pendingStatus = ref<string | null>(null)
-
-function confirmTransition(newStatus: string) {
-  pendingStatus.value = newStatus
-  showStatusConfirm.value = true
-}
-
-function executeTransition() {
-  if (pendingStatus.value) {
-    handleTransition(pendingStatus.value)
-  }
-  showStatusConfirm.value = false
-  pendingStatus.value = null
-}
-
-function cancelTransition() {
-  showStatusConfirm.value = false
-  pendingStatus.value = null
 }
 
 // ─────────────────────────────────────────────
@@ -599,6 +594,7 @@ function formatInterviewDate(dateStr: string) {
 
           <!-- ═══════════════════════════════════════ -->
           <!-- OVERVIEW TAB                            -->
+          <!-- ═══════════════════════════════════════ -->
           <div v-if="activeTab === 'overview'" class="space-y-5">
             <!-- Status & transitions -->
             <div>
@@ -898,7 +894,24 @@ function formatInterviewDate(dateStr: string) {
                 style="height: calc(100vh - 280px);"
                 title="Document preview"
               />
-            </template>
+            
+  <div v-if="showStatusConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 dark:bg-black/70" @click="cancelTransition" />
+    <div class="relative w-full max-w-sm rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-2xl p-6 text-center">
+      <div class="mx-auto mb-4 flex items-center justify-center size-12 rounded-2xl bg-warning-50 dark:bg-warning-950/40">
+        <AlertTriangle class="size-5 text-warning-600 dark:text-warning-400" />
+      </div>
+      <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">Change candidate status?</h3>
+      <p class="text-sm text-surface-500 dark:text-surface-400 mb-6">
+        Move this candidate to <strong class="text-surface-700 dark:text-surface-300">{{ transitionLabels[pendingStatus!] ?? pendingStatus }}</strong>?
+      </p>
+      <div class="flex items-center gap-2 justify-center">
+        <button class="rounded-xl px-4 py-2.5 text-sm font-medium text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors" @click="cancelTransition">Cancel</button>
+        <button class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors" @click="executeTransition">Confirm</button>
+      </div>
+    </div>
+  </div>
+</template>
 
             <!-- ── Document list (normal state) ── -->
             <template v-else>
@@ -967,8 +980,42 @@ function formatInterviewDate(dateStr: string) {
                         · {{ new Date(doc.createdAt).toLocaleDateString() }}
                         <template v-if="doc.parsed === false">
                           · <span class="text-warning-500 dark:text-warning-400">Text extraction failed</span>
-                        </template>
-                        <template v-else-if="doc.mimeType === 'application/pdf'"> · <span class="text-brand-500 dark:text-brand-400">Click to preview</span></template>
+                        
+  <div v-if="showStatusConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 dark:bg-black/70" @click="cancelTransition" />
+    <div class="relative w-full max-w-sm rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-2xl p-6 text-center">
+      <div class="mx-auto mb-4 flex items-center justify-center size-12 rounded-2xl bg-warning-50 dark:bg-warning-950/40">
+        <AlertTriangle class="size-5 text-warning-600 dark:text-warning-400" />
+      </div>
+      <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">Change candidate status?</h3>
+      <p class="text-sm text-surface-500 dark:text-surface-400 mb-6">
+        Move this candidate to <strong class="text-surface-700 dark:text-surface-300">{{ transitionLabels[pendingStatus!] ?? pendingStatus }}</strong>?
+      </p>
+      <div class="flex items-center gap-2 justify-center">
+        <button class="rounded-xl px-4 py-2.5 text-sm font-medium text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors" @click="cancelTransition">Cancel</button>
+        <button class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors" @click="executeTransition">Confirm</button>
+      </div>
+    </div>
+  </div>
+</template>
+                        <template v-else-if="doc.mimeType === 'application/pdf'"> · <span class="text-brand-500 dark:text-brand-400">Click to preview</span>
+  <div v-if="showStatusConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 dark:bg-black/70" @click="cancelTransition" />
+    <div class="relative w-full max-w-sm rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-2xl p-6 text-center">
+      <div class="mx-auto mb-4 flex items-center justify-center size-12 rounded-2xl bg-warning-50 dark:bg-warning-950/40">
+        <AlertTriangle class="size-5 text-warning-600 dark:text-warning-400" />
+      </div>
+      <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">Change candidate status?</h3>
+      <p class="text-sm text-surface-500 dark:text-surface-400 mb-6">
+        Move this candidate to <strong class="text-surface-700 dark:text-surface-300">{{ transitionLabels[pendingStatus!] ?? pendingStatus }}</strong>?
+      </p>
+      <div class="flex items-center gap-2 justify-center">
+        <button class="rounded-xl px-4 py-2.5 text-sm font-medium text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors" @click="cancelTransition">Cancel</button>
+        <button class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors" @click="executeTransition">Confirm</button>
+      </div>
+    </div>
+  </div>
+</template>
                       </span>
                     </div>
                   </div>
@@ -1007,7 +1054,24 @@ function formatInterviewDate(dateStr: string) {
                   </div>
                 </div>
               </div>
-            </template>
+            
+  <div v-if="showStatusConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 dark:bg-black/70" @click="cancelTransition" />
+    <div class="relative w-full max-w-sm rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-2xl p-6 text-center">
+      <div class="mx-auto mb-4 flex items-center justify-center size-12 rounded-2xl bg-warning-50 dark:bg-warning-950/40">
+        <AlertTriangle class="size-5 text-warning-600 dark:text-warning-400" />
+      </div>
+      <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">Change candidate status?</h3>
+      <p class="text-sm text-surface-500 dark:text-surface-400 mb-6">
+        Move this candidate to <strong class="text-surface-700 dark:text-surface-300">{{ transitionLabels[pendingStatus!] ?? pendingStatus }}</strong>?
+      </p>
+      <div class="flex items-center gap-2 justify-center">
+        <button class="rounded-xl px-4 py-2.5 text-sm font-medium text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors" @click="cancelTransition">Cancel</button>
+        <button class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors" @click="executeTransition">Confirm</button>
+      </div>
+    </div>
+  </div>
+</template>
           </div>
           <!-- ═══════════════════════════════════════ -->
           <!-- RESPONSES TAB                           -->
@@ -1123,7 +1187,24 @@ function formatInterviewDate(dateStr: string) {
             </div>
           </div>
 
-        </template>
+        
+  <div v-if="showStatusConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 dark:bg-black/70" @click="cancelTransition" />
+    <div class="relative w-full max-w-sm rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-2xl p-6 text-center">
+      <div class="mx-auto mb-4 flex items-center justify-center size-12 rounded-2xl bg-warning-50 dark:bg-warning-950/40">
+        <AlertTriangle class="size-5 text-warning-600 dark:text-warning-400" />
+      </div>
+      <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">Change candidate status?</h3>
+      <p class="text-sm text-surface-500 dark:text-surface-400 mb-6">
+        Move this candidate to <strong class="text-surface-700 dark:text-surface-300">{{ transitionLabels[pendingStatus!] ?? pendingStatus }}</strong>?
+      </p>
+      <div class="flex items-center gap-2 justify-center">
+        <button class="rounded-xl px-4 py-2.5 text-sm font-medium text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors" @click="cancelTransition">Cancel</button>
+        <button class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors" @click="executeTransition">Confirm</button>
+      </div>
+    </div>
+  </div>
+</template>
       </div>
     </aside>
   </Transition>
@@ -1169,44 +1250,22 @@ function formatInterviewDate(dateStr: string) {
     </div>
   </Teleport>
 
-  <!-- Status change confirmation dialog -->
-  <Teleport to="body">
-    <Transition
-      enter-active-class="transition duration-150 ease-out"
-      enter-from-class="opacity-0 scale-95"
-      enter-to-class="opacity-100 scale-100"
-      leave-active-class="transition duration-100 ease-in"
-      leave-from-class="opacity-100 scale-100"
-      leave-to-class="opacity-0 scale-95"
-    >
-      <div v-if="showStatusConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div class="absolute inset-0 bg-black/50 dark:bg-black/70" @click="cancelTransition" />
-        <div class="relative w-full max-w-sm rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-2xl p-6 text-center">
-          <div class="mx-auto mb-4 flex items-center justify-center size-12 rounded-2xl bg-warning-50 dark:bg-warning-950/40">
-            <AlertTriangle class="size-5 text-warning-600 dark:text-warning-400" />
-          </div>
-          <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">Change candidate status?</h3>
-          <p class="text-sm text-surface-500 dark:text-surface-400 mb-6">
-            Move this candidate to <strong class="text-surface-700 dark:text-surface-300">{{ transitionLabels[pendingStatus!] ?? pendingStatus }}</strong>?
-          </p>
-          <div class="flex items-center gap-2 justify-center">
-            <button
-              class="rounded-xl px-4 py-2.5 text-sm font-medium text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
-              @click="cancelTransition"
-            >
-              Cancel
-            </button>
-            <button
-              class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors"
-              @click="executeTransition"
-            >
-              Confirm
-            </button>
-          </div>
-        </div>
+  <div v-if="showStatusConfirm" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 dark:bg-black/70" @click="cancelTransition" />
+    <div class="relative w-full max-w-sm rounded-2xl border border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 shadow-2xl p-6 text-center">
+      <div class="mx-auto mb-4 flex items-center justify-center size-12 rounded-2xl bg-warning-50 dark:bg-warning-950/40">
+        <AlertTriangle class="size-5 text-warning-600 dark:text-warning-400" />
       </div>
-    </Transition>
-  </Teleport>
+      <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-100 mb-2">Change candidate status?</h3>
+      <p class="text-sm text-surface-500 dark:text-surface-400 mb-6">
+        Move this candidate to <strong class="text-surface-700 dark:text-surface-300">{{ transitionLabels[pendingStatus!] ?? pendingStatus }}</strong>?
+      </p>
+      <div class="flex items-center gap-2 justify-center">
+        <button class="rounded-xl px-4 py-2.5 text-sm font-medium text-surface-600 dark:text-surface-300 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors" @click="cancelTransition">Cancel</button>
+        <button class="rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 transition-colors" @click="executeTransition">Confirm</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <style scoped>
