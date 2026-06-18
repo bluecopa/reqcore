@@ -15,51 +15,6 @@ import WordExtractor from 'word-extractor'
 import { logError, logWarn } from './logger'
 
 
-/**
- * Ensure DOMMatrix, ImageData, and Path2D are available on globalThis before
- * pdfjs-dist initializes. Text extraction only needs basic text parsing —
- * rendering features (matrix math) aren't required.
- *
- * Prefers @napi-rs/canvas for proper implementations, but gracefully degrades
- * to minimal stubs when the native binary isn't available (e.g. Railway).
- */
-async function ensurePdfjsPolyfills() {
-  const needsDomMatrix = typeof globalThis.DOMMatrix === 'undefined'
-  const needsImageData = typeof globalThis.ImageData === 'undefined'
-  const needsPath2D = typeof globalThis.Path2D === 'undefined'
-
-  if (!needsDomMatrix && !needsImageData && !needsPath2D) return
-
-  try {
-    const canvas = await import('@napi-rs/canvas')
-    if (needsDomMatrix) globalThis.DOMMatrix = canvas.DOMMatrix as any
-    if (needsImageData) globalThis.ImageData = canvas.ImageData as any
-    if (needsPath2D) globalThis.Path2D = canvas.Path2D as any
-    return
-  } catch {
-    // Native binary unavailable — use minimal stubs.
-    // Text extraction doesn't need matrix math / path rendering.
-  }
-
-  if (needsDomMatrix) {
-    globalThis.DOMMatrix = class DOMMatrix {
-      a = 1; b = 0; c = 0; d = 1; e = 0; f = 0
-    } as any
-  }
-  if (needsImageData) {
-    globalThis.ImageData = class ImageData {
-      data: Uint8ClampedArray; width: number; height: number
-      constructor(w: number, h: number) {
-        this.width = w; this.height = h
-        this.data = new Uint8ClampedArray(w * h * 4)
-      }
-    } as any
-  }
-  if (needsPath2D) {
-    globalThis.Path2D = class Path2D {} as any
-  }
-}
-
 export interface ResumeSection {
   heading: string
   content: string
@@ -105,38 +60,59 @@ export async function parseDocument(
 }
 
 // ─── PDF Parser ───────────────────────────────────────────────────
+// Uses pdfjs-dist directly for text extraction via getTextContent().
+// This API needs zero canvas/DOMatrix/rendering — pure text layer.
+// The pdf-parse wrapper was dropped because its rendering path fails
+// on platforms without native canvas (Railway).
+
+let pdfjsLib: any = null
+async function getPdfjsLib() {
+  if (pdfjsLib) return pdfjsLib
+  pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs')
+  // Disable worker — text extraction is fast enough on main thread
+  pdfjsLib.GlobalWorkerOptions.workerSrc = ''
+  return pdfjsLib
+}
 
 async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
   if (buffer.length === 0) return null
 
-  // Polyfill browser globals before pdfjs-dist evaluates its module-level code
-  await ensurePdfjsPolyfills()
-  const { PDFParse } = await import('pdf-parse')
+  try {
+    const pdfjs = await getPdfjsLib()
+    const loadingTask = pdfjs.getDocument({ data: new Uint8Array(buffer), disableWorker: true })
+    const pdf = await loadingTask.promise
 
-  const parser = new PDFParse({ data: buffer })
-  const result = await parser.getText()
+    const pageTexts: string[] = []
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i)
+      const content = await page.getTextContent()
+      const pageText = content.items
+        .map((item: any) => item.str ?? '')
+        .join(' ')
+      pageTexts.push(pageText)
+    }
 
-  const text = normalizeText(result.text)
-  if (!text) {
-    await parser.destroy()
+    const text = normalizeText(pageTexts.join('\n'))
+    if (!text) return null
+
+    return {
+      text,
+      sections: extractSections(text),
+      metadata: {
+        pageCount: pdf.numPages,
+        wordCount: countWords(text),
+        characterCount: text.length,
+        extractedAt: new Date().toISOString(),
+        parserVersion: PARSER_VERSION,
+        sourceFormat: 'pdf' as const,
+      },
+    }
+  } catch (error) {
+    logError('resume_parser.pdf_failed', {
+      error_message: error instanceof Error ? error.message : String(error),
+    })
     return null
   }
-
-  const parsed: ParsedResume = {
-    text,
-    sections: extractSections(text),
-    metadata: {
-      pageCount: result.total,
-      wordCount: countWords(text),
-      characterCount: text.length,
-      extractedAt: new Date().toISOString(),
-      parserVersion: PARSER_VERSION,
-      sourceFormat: 'pdf',
-    },
-  }
-
-  await parser.destroy()
-  return parsed
 }
 
 // ─── DOCX Parser ──────────────────────────────────────────────────
