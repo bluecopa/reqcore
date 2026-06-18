@@ -12,28 +12,20 @@
 import mammoth from 'mammoth'
 // @ts-ignore — word-extractor has no bundled type declarations
 import WordExtractor from 'word-extractor'
+// @napi-rs/canvas provides proper DOMMatrix/ImageData/Path2D for Node.js.
+// The bare stubs previously used here (identity matrix with no methods) caused
+// pdfjs-dist to crash silently when calling .multiplySelf() etc.
+import { DOMMatrix, ImageData, Path2D } from '@napi-rs/canvas'
 
-// pdfjs-dist uses browser APIs (DOMMatrix, Path2D, ImageData) at module scope.
-// In Node.js these don't exist, so we install minimal stubs before importing.
-// We only use pdfjs-dist for text extraction — no actual rendering is needed.
 function ensurePdfjsPolyfills() {
   if (typeof globalThis.DOMMatrix === 'undefined') {
-    // Minimal 6-value identity matrix stub — enough for pdfjs-dist text layer
-    globalThis.DOMMatrix = class DOMMatrix {
-      a = 1; b = 0; c = 0; d = 1; e = 0; f = 0
-    } as any
+    globalThis.DOMMatrix = DOMMatrix as any
   }
   if (typeof globalThis.ImageData === 'undefined') {
-    globalThis.ImageData = class ImageData {
-      data: Uint8ClampedArray; width: number; height: number
-      constructor(w: number, h: number) {
-        this.width = w; this.height = h
-        this.data = new Uint8ClampedArray(w * h * 4)
-      }
-    } as any
+    globalThis.ImageData = ImageData as any
   }
   if (typeof globalThis.Path2D === 'undefined') {
-    globalThis.Path2D = class Path2D {} as any
+    globalThis.Path2D = Path2D as any
   }
 }
 
