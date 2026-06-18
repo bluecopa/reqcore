@@ -103,13 +103,19 @@ async function runAnalysis() {
     track('ai_analysis_run', { application_id: props.applicationId, ai_config_id: selectedAiConfigId.value })
     emit('scored')
   } catch (err: any) {
-    const data = err?.data?.data
-    if (data?.code === 'PARSE_FAILED' && data?.documentId) {
-      parseFailedDocId.value = data.documentId
+    const errorData = err?.data?.data ?? err?.data
+    const statusMessage = err?.data?.statusMessage ?? ''
+    if (errorData?.code === 'PARSE_FAILED' && errorData?.documentId) {
+      parseFailedDocId.value = errorData.documentId
+    } else if (statusMessage.includes('text extraction failed')) {
+      // Fallback: look up resume doc from application data
+      try {
+        const app = await $fetch(`/api/applications/${props.applicationId}`, { headers: useRequestHeaders(['cookie']) })
+        const resumeDoc = (app as any)?.candidate?.documents?.find((d: any) => d.type === 'resume')
+        if (resumeDoc?.id) parseFailedDocId.value = resumeDoc.id
+      } catch { /* best-effort */ }
     }
-    analyzeError.value = err?.data?.statusMessage ?? 'Analysis failed. Make sure AI is configured in settings.'
-  } finally {
-    isAnalyzing.value = false
+    analyzeError.value = statusMessage || 'Analysis failed. Make sure AI is configured in settings.'
   }
 }
 
