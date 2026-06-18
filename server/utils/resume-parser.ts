@@ -12,38 +12,51 @@
 import mammoth from 'mammoth'
 // @ts-ignore — word-extractor has no bundled type declarations
 import WordExtractor from 'word-extractor'
-// @napi-rs/canvas provides proper DOMMatrix/ImageData/Path2D for Node.js.
-// The bare stubs previously used here (identity matrix with no methods) caused
-// pdfjs-dist to crash silently when calling .multiplySelf() etc.
-import { DOMMatrix, ImageData, Path2D } from '@napi-rs/canvas'
+import { logError, logWarn } from './logger'
 
-function ensurePdfjsPolyfills() {
-  if (typeof globalThis.DOMMatrix === 'undefined') {
-    globalThis.DOMMatrix = DOMMatrix as any
-  }
-  if (typeof globalThis.ImageData === 'undefined') {
-    globalThis.ImageData = ImageData as any
-  }
-  if (typeof globalThis.Path2D === 'undefined') {
-    globalThis.Path2D = Path2D as any
-  }
-}
 
-const PARSER_VERSION = '1.0'
+/**
+ * Ensure DOMMatrix, ImageData, and Path2D are available on globalThis before
+ * pdfjs-dist initializes. Text extraction only needs basic text parsing —
+ * rendering features (matrix math) aren't required.
+ *
+ * Prefers @napi-rs/canvas for proper implementations, but gracefully degrades
+ * to minimal stubs when the native binary isn't available (e.g. Railway).
+ */
+async function ensurePdfjsPolyfills() {
+  const needsDomMatrix = typeof globalThis.DOMMatrix === 'undefined'
+  const needsImageData = typeof globalThis.ImageData === 'undefined'
+  const needsPath2D = typeof globalThis.Path2D === 'undefined'
 
-export interface ParsedResume {
-  /** Full extracted text content */
-  text: string
-  /** Detected sections (best-effort heuristic) */
-  sections: ResumeSection[]
-  /** Parsing metadata */
-  metadata: {
-    pageCount: number | null
-    wordCount: number
-    characterCount: number
-    extractedAt: string
-    parserVersion: string
-    sourceFormat: 'pdf' | 'docx' | 'doc'
+  if (!needsDomMatrix && !needsImageData && !needsPath2D) return
+
+  try {
+    const canvas = await import('@napi-rs/canvas')
+    if (needsDomMatrix) globalThis.DOMMatrix = canvas.DOMMatrix as any
+    if (needsImageData) globalThis.ImageData = canvas.ImageData as any
+    if (needsPath2D) globalThis.Path2D = canvas.Path2D as any
+    return
+  } catch {
+    // Native binary unavailable — use minimal stubs.
+    // Text extraction doesn't need matrix math / path rendering.
+  }
+
+  if (needsDomMatrix) {
+    globalThis.DOMMatrix = class DOMMatrix {
+      a = 1; b = 0; c = 0; d = 1; e = 0; f = 0
+    } as any
+  }
+  if (needsImageData) {
+    globalThis.ImageData = class ImageData {
+      data: Uint8ClampedArray; width: number; height: number
+      constructor(w: number, h: number) {
+        this.width = w; this.height = h
+        this.data = new Uint8ClampedArray(w * h * 4)
+      }
+    } as any
+  }
+  if (needsPath2D) {
+    globalThis.Path2D = class Path2D {} as any
   }
 }
 
@@ -94,7 +107,7 @@ async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
   if (buffer.length === 0) return null
 
   // Polyfill browser globals before pdfjs-dist evaluates its module-level code
-  ensurePdfjsPolyfills()
+  await ensurePdfjsPolyfills()
   const { PDFParse } = await import('pdf-parse')
 
   const parser = new PDFParse({ data: buffer })
