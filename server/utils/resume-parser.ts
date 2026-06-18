@@ -13,8 +13,6 @@ import WordExtractor from 'word-extractor'
 import { logError, logWarn } from './logger'
 
 
-
-const PARSER_VERSION = '1.0'
 export interface ResumeSection {
   heading: string
   content: string
@@ -105,7 +103,7 @@ async function parsePdf(buffer: Buffer): Promise<ParsedResume | null> {
         wordCount: countWords(text),
         characterCount: text.length,
         extractedAt: new Date().toISOString(),
-        parserVersion: PARSER_VERSION,
+        parserVersion: '1.0',
         sourceFormat: 'pdf' as const,
       },
     }
@@ -135,7 +133,7 @@ async function parseDocx(buffer: Buffer): Promise<ParsedResume | null> {
       wordCount: countWords(text),
       characterCount: text.length,
       extractedAt: new Date().toISOString(),
-      parserVersion: PARSER_VERSION,
+      parserVersion: '1.0',
       sourceFormat: 'docx',
     },
   }
@@ -166,7 +164,7 @@ async function parseDoc(buffer: Buffer): Promise<ParsedResume | null> {
       wordCount: countWords(text),
       characterCount: text.length,
       extractedAt: new Date().toISOString(),
-      parserVersion: PARSER_VERSION,
+      parserVersion: '1.0',
       sourceFormat: 'doc',
     },
   }
