@@ -41,6 +41,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Document not found' })
   }
 
+  const fileBuffer = await downloadFromS3(doc.storageKey)
   logInfo('reparse.downloaded', { docId: documentId, bytes: fileBuffer.length, mimeType: doc.mimeType })
 
   // Parse document content
