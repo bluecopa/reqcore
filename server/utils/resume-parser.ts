@@ -13,6 +13,8 @@ import WordExtractor from 'word-extractor'
 import { logError, logWarn } from './logger'
 
 
+
+const PARSER_VERSION = '1.0'
 export interface ResumeSection {
   heading: string
   content: string
