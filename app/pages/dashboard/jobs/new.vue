@@ -300,7 +300,19 @@ function restoreFormFromStorage() {
     if (!raw) return
     const data = JSON.parse(raw)
     if (data.form) Object.assign(form.value, data.form)
-    if (data.applicationForm) Object.assign(applicationForm.value, data.applicationForm)
+    if (data.applicationForm) {
+      Object.assign(applicationForm.value, data.applicationForm)
+      // Drop questions restored in a stale/invalid shape (missing label, or options
+      // that would fail server validation) so they can't break job creation later.
+      applicationForm.value.questions = (applicationForm.value.questions ?? [])
+        .filter((q) => q && typeof q.label === 'string' && q.label.trim().length > 0)
+        .map((q) => {
+          const options = Array.isArray(q.options)
+            ? q.options.filter((o) => typeof o === 'string' && o.trim().length > 0)
+            : null
+          return { ...q, options: options && options.length > 0 ? options : null }
+        })
+    }
     if (data.scoringCriteria) scoringCriteria.value = data.scoringCriteria
     if (data.scoringMode) scoringMode.value = data.scoringMode
     if (data.autoScoreOnApply != null) autoScoreOnApply.value = data.autoScoreOnApply
@@ -649,6 +661,9 @@ async function handleSubmit(mode: 'publish' | 'draft' = publishChoice.value) {
   }
 
   isSubmitting.value = true
+  // Track which step is running so a failure reports the real cause instead of
+  // always blaming job creation (the job row is created before questions/publish).
+  let phase: 'create' | 'questions' | 'publish' = 'create'
   try {
     const created = await createJob({
       title: form.value.title,
@@ -665,20 +680,24 @@ async function handleSubmit(mode: 'publish' | 'draft' = publishChoice.value) {
     track('job_created')
 
     if (applicationForm.value.questions.length > 0 && created?.id) {
+      phase = 'questions'
       await Promise.all(
-        applicationForm.value.questions.map((question, index) => (
-          $fetch(`/api/jobs/${created.id}/questions`, {
+        applicationForm.value.questions.map((question, index) => {
+          // Only send a non-empty options array — the API rejects a present-but-empty
+          // array (`[]`), and `[] || undefined` does NOT drop it (empty arrays are truthy).
+          const options = question.options?.filter((o) => o.trim().length > 0)
+          return $fetch(`/api/jobs/${created.id}/questions`, {
             method: 'POST',
             body: {
               label: question.label,
               type: question.type,
               description: question.description || undefined,
               required: question.required,
-              options: question.options || undefined,
+              options: options && options.length > 0 ? options : undefined,
               displayOrder: index,
             },
           })
-        )),
+        }),
       )
     }
 
@@ -706,6 +725,7 @@ async function handleSubmit(mode: 'publish' | 'draft' = publishChoice.value) {
 
     if (mode === 'publish' && created?.id) {
       // Publish the job immediately
+      phase = 'publish'
       await $fetch(`/api/jobs/${created.id}`, {
         method: 'PATCH',
         body: { status: 'open' },
@@ -736,9 +756,16 @@ async function handleSubmit(mode: 'publish' | 'draft' = publishChoice.value) {
     }
     clearFormStorage()
   } catch (err: any) {
-    const statusMessage = err?.data?.statusMessage ?? 'Something went wrong while creating the job.'
-    toast.error('Failed to create job', {
-      message: statusMessage,
+    const statusMessage = err?.data?.statusMessage ?? 'Something went wrong.'
+    const title = phase === 'questions'
+      ? 'Job created, but a screening question was rejected'
+      : phase === 'publish'
+        ? 'Job created, but publishing failed'
+        : 'Failed to create job'
+    toast.error(title, {
+      message: phase === 'create'
+        ? statusMessage
+        : `${statusMessage}. The job was saved as a draft — open it from Jobs to finish.`,
       statusCode: err?.data?.statusCode,
     })
   } finally {

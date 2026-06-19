@@ -30,6 +30,7 @@ export default defineEventHandler(async (event) => {
     requireCoverLetter: body.requireCoverLetter,
     autoScoreOnApply: body.autoScoreOnApply,
     experienceLevel: body.experienceLevel,
+    notificationRecipientIds: body.notificationRecipientIds,
   }).returning({
     id: job.id,
     title: job.title,
@@ -49,6 +50,7 @@ export default defineEventHandler(async (event) => {
     requireCoverLetter: job.requireCoverLetter,
     autoScoreOnApply: job.autoScoreOnApply,
     experienceLevel: job.experienceLevel,
+    notificationRecipientIds: job.notificationRecipientIds,
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
   })
